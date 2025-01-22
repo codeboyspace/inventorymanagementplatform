@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InventoryPanel } from '@/components/inventory/InventoryPanel';
 import { useToast } from '@/components/ui/use-toast';
+import { useEffect } from 'react';
+import axios from 'axios';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -18,6 +20,30 @@ export default function Dashboard() {
     };
     return titles[role as keyof typeof titles] || role;
   };
+
+  const saveUserToDB = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await axios.post('http://localhost:5000/api/users/save', {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      });
+
+      if (response.status === 201) {
+        toast({ title: "User saved successfully", description: "Your info is stored in the database." });
+      } else {
+        toast({ title: "User already exists", description: "Welcome back!" });
+      }
+    } catch (error) {
+      toast({ title: "Error saving user", description: "Something went wrong!" });
+    }
+  };
+
+  useEffect(() => {
+    if (user) saveUserToDB();
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
