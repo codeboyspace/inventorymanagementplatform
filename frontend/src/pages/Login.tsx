@@ -1,33 +1,39 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import axios from "axios";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<string>('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("email",email)
     try {
-      await login(email, password);
-      toast.success('Successfully logged in');
-      navigate('/dashboard');
+      const response = await axios.post("http://127.0.0.1:8000/api/login/", {
+        email,
+        password,
+      });
+
+       if (response.status === 200) {
+         const { role } = response.data;
+         login(email, role);
+         toast.success("Successfully logged in");
+         navigate("/dashboard");
+       }
+       console.log(response); 
+      
     } catch (error) {
-      toast.error('Invalid credentials');
+      toast.error(error.response?.data?.message || "Invalid credentials");
+      console.log(error);
+      
     }
   };
 
@@ -44,7 +50,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Input
-                type="email"
+                type="text"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -62,18 +68,6 @@ export default function Login() {
                 className="w-full"
               />
             </div>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a Role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="administrator">Administrator</SelectItem>
-                <SelectItem value="storekeeper">Store Keeper</SelectItem>
-                <SelectItem value="stockmanagement">Stock Management</SelectItem>
-                <SelectItem value="stockdisburser">Stock Disburser</SelectItem>
-                <SelectItem value="storemanager">Store Manager</SelectItem>
-              </SelectContent>
-            </Select>
             <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
               Login
             </Button>
